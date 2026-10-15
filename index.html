@@ -105,6 +105,7 @@ kbd{font:11px var(--sans);border:1px solid var(--line2);border-bottom-width:2px;
 .chip.none{background:none;border-style:dashed}
 .grp{padding:14px 16px 16px;border-bottom:1px solid var(--line)}
 .grp:last-child{border-bottom:0}
+.note{color:var(--faint);font-size:12.5px;margin:-4px 0 12px}
 .grp h3{font-size:11.5px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
 .row2{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;row-gap:5px;margin-bottom:12px}
 .row2:last-child{margin-bottom:0}
@@ -159,7 +160,7 @@ button:focus-visible{outline:2px solid rgba(255,138,76,.7);outline-offset:2px}
       <p class="tag">Your sound. Somewhere else.</p>
       <p class="sub">Drop in any audio and place it in a tunnel, a stadium, a car or underwater, then shape it with a 3-band EQ and every knob behind it.</p>
     </div>
-    <div class="keys"><span><kbd>Space</kbd> play</span><span><kbd>B</kbd> before / after</span><span><kbd>↑</kbd><kbd>↓</kbd> presets</span><span><kbd>←</kbd><kbd>→</kbd> seek</span></div>
+    <div class="keys"><span><kbd>Space</kbd> play</span><span><kbd>B</kbd> before / after</span><span><kbd>↑</kbd><kbd>↓</kbd> presets</span><span><kbd>←</kbd><kbd>→</kbd> seek</span><span><kbd>[</kbd><kbd>]</kbd> loop section</span></div>
   </header>
 
   <div class="grid">
@@ -181,7 +182,8 @@ button:focus-visible{outline:2px solid rgba(255,138,76,.7);outline-offset:2px}
           <span class="time" id="time">0:00 / 0:00</span>
           <span class="fname" id="fname"></span>
           <span class="spacer"></span>
-          <button class="tog" id="loop" aria-pressed="true"><span class="led"></span>Loop</button>
+          <button class="tog" id="loop" aria-pressed="true" title="Loop the whole track"><span class="led"></span>Loop</button>
+          <button class="tog" id="sect" aria-pressed="false" title="Loop just a section. Drag the handles, or press [ and ] at the playhead"><span class="led"></span>Section</button>
           <button class="tog" id="fxtog" aria-pressed="true" title="Compare with the original (B)"><span class="led"></span>Effects</button>
           <label class="vol" title="Monitor volume"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 4V5L7 9H3Zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Z"/></svg><input type="range" id="vol" min="0" max="1000" value="800" aria-label="Volume"></label>
           <button class="btn" id="export" disabled>Export WAV</button>
@@ -219,7 +221,7 @@ const D = {
   ecT:300, ecFb:.35, ecMix:0,
   drive:0, wob:0, wobRate:.6, pitch:0, mono:0,
   noise:0, noiseLp:400, gain:0,
-  size:21, bass:0, bassX:120, bassF:50, bassQ:1.5, bassSticky:0, bassDrive:0
+  size:21, subSize:15, bass:0, bassX:120, bassF:50, bassQ:1.5, bassSticky:0, bassDrive:0
 };
 
 const CATS = [
@@ -309,23 +311,23 @@ P('devices','Boombox',        {eqL:7, eqH:1, drive:.25, rvMix:.1, rvDecay:.2});
 P('devices','Lo-fi tape',     {lp:6000, hp:60, drive:.15, wob:.2, wobRate:.5, noise:.04, noiseLp:5000, eqH:-3});
 P('devices','Dusty record',   {lp:9000, hp:40, wob:.06, wobRate:.55, noise:.07, noiseLp:6000, drive:.05, eqL:1});
 // bass & subs
-P('bass','Club subs',        {bass:.7, bassX:100, bassF:45, bassQ:2, bassSticky:.3, size:18, eqL:2});
-P('bass','Car subs',         {bass:.9, bassX:80, bassF:38, bassQ:4, bassSticky:.5, bassDrive:.25, size:12, lp:8000, rvMix:.1, rvDecay:.15, noise:.08, noiseLp:200});
-P('bass','Dual 18s',         {bass:1, bassX:90, bassF:32, bassQ:3, bassSticky:.4, bassDrive:.1, size:18, eqL:3, gain:-2});
-P('bass','Boomy 808',        {bass:.9, bassX:110, bassF:50, bassQ:7, bassSticky:.8, bassDrive:.2, size:15});
-P('bass','Tight sealed sub', {bass:.95, bassX:100, bassF:55, bassQ:.8, bassSticky:0, size:12});
-P('bass','Ported boom',      {bass:.8, bassX:100, bassF:40, bassQ:5, bassSticky:.6, size:15});
-P('bass','Sticky bass',      {bass:.8, bassX:100, bassF:50, bassQ:3, bassSticky:1, size:12});
-P('bass','Loose & floppy',   {bass:.7, bassX:110, bassF:45, bassQ:6, bassSticky:.7, size:18, eqL:2});
-P('bass','Distorted subs',   {bass:.9, bassX:100, bassF:45, bassQ:3, bassSticky:.4, bassDrive:.8, size:12, gain:-2});
-P('bass','Earthquake',       {bass:1, bassX:70, bassF:30, bassQ:6, bassSticky:.9, bassDrive:.3, size:21, eqL:5, gain:-3});
-P('bass','Subs next door',   {lp:250, bass:.8, bassX:80, bassF:40, bassQ:3, bassSticky:.4, size:15, gain:3});
-P('bass','Punchy kick',      {bass:.95, bassX:120, bassF:60, bassQ:1.5, bassSticky:.1, bassDrive:.1, size:10});
-P('bass','Bass-boosted cans',{bass:.5, bassX:150, bassF:60, bassQ:1, bassSticky:.2, size:12, eqL:3});
-P('bass','Clean studio sub', {bass:.5, bassX:90, bassF:50, bassQ:.7, bassSticky:0, size:15});
+P('bass','Club subs',        {bass:.7, bassX:100, bassF:45, bassQ:2, bassSticky:.3, subSize:18, eqL:2});
+P('bass','Car subs',         {bass:.9, bassX:80, bassF:38, bassQ:4, bassSticky:.5, bassDrive:.25, subSize:12, lp:8000, rvMix:.1, rvDecay:.15, noise:.08, noiseLp:200});
+P('bass','Big 18 sub',         {bass:1, bassX:90, bassF:32, bassQ:3, bassSticky:.4, bassDrive:.1, subSize:18, eqL:3, gain:-2});
+P('bass','Boomy 808',        {bass:.9, bassX:110, bassF:50, bassQ:7, bassSticky:.8, bassDrive:.2, subSize:15});
+P('bass','Tight sealed sub', {bass:.95, bassX:100, bassF:55, bassQ:.8, bassSticky:0, subSize:12});
+P('bass','Ported boom',      {bass:.8, bassX:100, bassF:40, bassQ:5, bassSticky:.6, subSize:15});
+P('bass','Sticky bass',      {bass:.8, bassX:100, bassF:50, bassQ:3, bassSticky:1, subSize:12});
+P('bass','Loose & floppy',   {bass:.7, bassX:110, bassF:45, bassQ:6, bassSticky:.7, subSize:18, eqL:2});
+P('bass','Distorted subs',   {bass:.9, bassX:100, bassF:45, bassQ:3, bassSticky:.4, bassDrive:.8, subSize:12, gain:-2});
+P('bass','Earthquake',       {bass:1, bassX:70, bassF:30, bassQ:6, bassSticky:.9, bassDrive:.3, subSize:21, eqL:5, gain:-3});
+P('bass','Subs next door',   {lp:250, bass:.8, bassX:80, bassF:40, bassQ:3, bassSticky:.4, subSize:15, gain:3});
+P('bass','Punchy kick',      {bass:.95, bassX:120, bassF:60, bassQ:1.5, bassSticky:.1, bassDrive:.1, subSize:10});
+P('bass','Bass-boosted cans',{bass:.5, bassX:150, bassF:60, bassQ:1, bassSticky:.2, subSize:12, eqL:3});
+P('bass','Clean studio sub', {bass:.5, bassX:90, bassF:50, bassQ:.7, bassSticky:0, subSize:15});
 // driver sizes
-[[3,'3″ laptop driver'],[4,'4″ micro speaker'],[5.25,'5¼″ bookshelf'],[6.5,'6½″ door speaker'],[8,'8″ woofer'],[10,'10″ woofer'],[12,'12″ woofer'],[15,'15″ woofer'],[18,'18″ sub'],[21,'21″ monster sub']].forEach(([s, n]) =>
-  P('drivers', n, s >= 8 ? {size:s, bass:.35, bassX:120, bassF:Math.round(20 * Math.pow(21 / s, 1.35) * 1.7), bassQ:1.5, bassSticky:.15} : {size:s}));
+[[3,'3″ laptop drivers'],[4,'4″ micro speakers'],[5.25,'5¼″ bookshelves'],[6.5,'6½″ door speakers'],[8,'8″ mains'],[10,'10″ mains'],[12,'12″ mains'],[15,'15″ mains'],[18,'18″ mains'],[21,'21″ full-range']].forEach(([s, n]) =>
+  P('drivers', n, {size:s}));
 // moods
 P('mood','Slowed + reverb',{pitch:-3, rvMix:.5, rvDecay:4, rvDamp:.5, rvPre:30, eqH:-2});
 P('mood','Nightcore',      {pitch:4, eqH:2});
@@ -370,7 +372,8 @@ const SL = {
   noise:{label:'Level', min:0, max:1, fmt:fpc},
   noiseLp:{label:'Colour (low → airy)', min:80, max:8000, log:1, fmt:fhz},
   gain:{label:'Makeup gain', min:-12, max:12, step:.5, fmt:fdb},
-  size:{label:'Driver size', min:3, max:21, log:1, step:.25, fmt:v => (Math.round(v * 4) / 4) + '″' + (v >= 20.5 ? ' (full range)' : '')},
+  size:{label:'Main drivers (L + R)', min:3, max:21, log:1, step:.25, fmt:v => (Math.round(v * 4) / 4) + '″' + (v >= 20.5 ? ' (full range)' : '')},
+  subSize:{label:'Sub driver size', min:6, max:24, log:1, step:.5, fmt:v => (Math.round(v * 2) / 2) + '″'},
   bass:{label:'Sub level', min:0, max:1, fmt:fpc},
   bassX:{label:'Crossover', min:40, max:250, log:1, fmt:fhz},
   bassF:{label:'Tuning', min:25, max:120, log:1, fmt:fhz},
@@ -380,7 +383,7 @@ const SL = {
 };
 const GROUPS = [
   ['3-band EQ', ['eqL','eqM','eqH'], 'faders'],
-  ['Bass & drivers', ['size','bass','bassX','bassF','bassQ','bassSticky','bassDrive']],
+  ['Bass & drivers', ['size','subSize','bass','bassX','bassF','bassQ','bassSticky','bassDrive']],
   ['Filter', ['hp','lp']],
   ['Space', ['rvMix','rvDecay','rvDamp','rvPre','dry']],
   ['Echo', ['ecT','ecFb','ecMix']],
@@ -436,7 +439,9 @@ class FX {
     this.ext = f('highpass', 20, .8);
     this.hp = f('highpass', 20); this.lp = f('lowpass', 20000);
     // parallel sub path: crossover -> resonance -> driver saturation -> stickiness -> level
-    this.bX = f('lowpass', 120); this.bRes = f('peaking', 50, 1.5); this.bPre = c.createGain(); this.bPre.gain.value = 2.5;
+    this.bSum = c.createGain(); this.bSum.channelCountMode = 'explicit'; this.bSum.channelCount = 1; this.bSum.channelInterpretation = 'speakers';
+    this.lfeIn = c.createGain(); this.bSelMix = c.createGain(); this.bSelLfe = c.createGain(); this.bSelLfe.gain.value = 0; this.lfe = false;
+    this.bExt = f('highpass', 20, .8); this.bX = f('lowpass', 120); this.bRes = f('peaking', 50, 1.5); this.bPre = c.createGain(); this.bPre.gain.value = 2.5;
     this.bSat = c.createWaveShaper(); this.bSat.oversample = '4x';
     this.bComp = c.createDynamicsCompressor(); this.bComp.knee.value = 6; this.bG = c.createGain(); this.bG.gain.value = 0;
     this.shaper = c.createWaveShaper(); this.shaper.oversample = '2x';
@@ -456,7 +461,8 @@ class FX {
     this.nSrc.connect(this.nLp).connect(this.nG).connect(this.master); this.nSrc.start();
     // graph
     this.input.connect(this.mono).connect(this.lo).connect(this.mid).connect(this.hi).connect(this.ext).connect(this.hp).connect(this.lp).connect(this.shaper).connect(this.vib);
-    this.hi.connect(this.bX).connect(this.bRes).connect(this.bPre).connect(this.bSat).connect(this.bComp).connect(this.bG).connect(this.mix);
+    this.hi.connect(this.bSum).connect(this.bSelMix).connect(this.bX); this.lfeIn.connect(this.bSelLfe).connect(this.bX);
+    this.bX.connect(this.bExt).connect(this.bRes).connect(this.bPre).connect(this.bSat).connect(this.bComp).connect(this.bG).connect(this.mix);
     this.vib.connect(this.dryG).connect(this.mix);
     this.vib.connect(this.echoD); this.echoD.connect(this.echoLp).connect(this.echoFb).connect(this.echoD); this.echoD.connect(this.echoOut).connect(this.mix);
     this.vib.connect(this.rvPre); this.rvOut.connect(this.mix);
@@ -464,6 +470,12 @@ class FX {
     for (let i = 0; i < 2048; i++){ const x = i * 2 / 2047 - 1, a = Math.abs(x); cc[i] = Math.sign(x) * (a < .8 ? a : .8 + .2 * Math.tanh((a - .8) / .2)); }
     this.clip.curve = cc;
     this.mix.connect(this.master).connect(this.comp).connect(this.clip).connect(this.analyser).connect(c.destination);
+  }
+  connectSource(src, nch){
+    src.connect(this.input);
+    this.lfe = nch >= 6;
+    this.bSelMix.gain.value = this.lfe ? 0 : 1; this.bSelLfe.gain.value = this.lfe ? 1 : 0;
+    if (this.lfe){ const sp = this.ctx.createChannelSplitter(nch); src.connect(sp); sp.connect(this.lfeIn, 3); }
   }
   ir(decay, damp, kind){
     const key = decay.toFixed(2) + '|' + damp.toFixed(2) + '|' + kind;
@@ -498,11 +510,11 @@ class FX {
       else { const n = 2048, cv = new Float32Array(n), th = Math.tanh(g); for (let i = 0; i < n; i++) cv[i] = Math.tanh(g * (i * 2 / (n - 1) - 1)) / th; this.shaper.curve = cv; }
     }
     set(this.ext.frequency, Math.max(20, 20 * Math.pow(21 / s.size, 1.35)));
-    set(this.bX.frequency, s.bassX); set(this.bRes.frequency, s.bassF); set(this.bRes.Q, s.bassQ);
-    set(this.bRes.gain, Math.min(14, 3 + s.bassQ * 1.6));
+    set(this.bExt.frequency, Math.max(20, 20 * Math.pow(21 / s.subSize, 1.35))); set(this.bX.frequency, s.bassX); set(this.bRes.frequency, s.bassF); set(this.bRes.Q, s.bassQ);
+    set(this.bRes.gain, Math.min(14, 3 + s.bassQ * 1.6) * Math.min(1, s.bass * 4));
     set(this.bComp.threshold, -34 + s.bassSticky * 8); set(this.bComp.ratio, 2 + s.bassSticky * 14);
     set(this.bComp.attack, .004 + s.bassSticky * .03); set(this.bComp.release, .05 + s.bassSticky * .7);
-    set(this.bG.gain, s.bass * .9 * (1 + s.bassSticky * .8));
+    set(this.bG.gain, (this.lfe ? .9 : 0) + s.bass * .9 * (1 + s.bassSticky * .8));
     if (s.bassDrive !== this._bd){
       this._bd = s.bassDrive; const bg = 1 + s.bassDrive * 9, n = 1024, cv = new Float32Array(n), th = Math.tanh(bg);
       for (let i = 0; i < n; i++) cv[i] = Math.tanh(bg * (i * 2 / (n - 1) - 1)) / th; this.bSat.curve = cv;
@@ -522,11 +534,13 @@ class FX {
 /* ---------- app state ---------- */
 let ctx = null, fx = null, buf = null, fileName = '';
 let state = { ...D }, current = null, bypass = false, loop = true;
+const sec = { on:false, s:0, e:0 };
 const pl = { playing:false, src:null, offset:0, startedAt:0, rate:1 };
 const pos = () => {
   if (!buf) return 0;
   if (!pl.playing) return pl.offset;
   const p = pl.offset + (ctx.currentTime - pl.startedAt) * pl.rate;
+  if (sec.on) return p >= sec.e ? sec.s + (p - sec.s) % (sec.e - sec.s) : p;
   return loop ? p % buf.duration : Math.min(p, buf.duration);
 };
 const eff = () => bypass ? D : state;
@@ -544,8 +558,9 @@ const volVal = () => Math.pow($('#vol').value / 1000, 2) * 1.25;
 
 /* ---------- transport ---------- */
 function startSrc(){
-  const s = ctx.createBufferSource(); s.buffer = buf; s.loop = loop; pl.rate = rateOf(eff()); s.playbackRate.value = pl.rate;
-  s.connect(fx.input);
+  const s = ctx.createBufferSource(); s.buffer = buf; s.loop = loop || sec.on;
+  if (sec.on){ s.loopStart = sec.s; s.loopEnd = sec.e; pl.offset = Math.min(Math.max(pl.offset, sec.s), sec.e - .01); } pl.rate = rateOf(eff()); s.playbackRate.value = pl.rate;
+  fx.connectSource(s, buf.numberOfChannels); fx.apply(eff(), false);
   s.onended = () => { if (pl.src === s && !loop){ pl.playing = false; pl.offset = 0; pl.src = null; setPlayIcon(); draw(); } };
   pl.offset = Math.min(pl.offset, Math.max(0, buf.duration - .01));
   s.start(0, pl.offset); pl.startedAt = ctx.currentTime; pl.src = s; pl.playing = true;
@@ -553,8 +568,22 @@ function startSrc(){
 function stopSrc(){ if (pl.src){ pl.src.onended = null; try { pl.src.stop(); } catch (e) {} pl.src = null; } }
 function play(){ if (!buf) return; ensureCtx(); if (pl.playing) return; startSrc(); setPlayIcon(); tick(); }
 function pause(){ if (!pl.playing) return; pl.offset = pos(); stopSrc(); pl.playing = false; setPlayIcon(); draw(); }
+function applySection(){
+  if (!buf) return; const p = pos(); pl.offset = Math.min(Math.max(p, sec.s), sec.e - .01);
+  if (pl.playing){ stopSrc(); startSrc(); } draw();
+}
+function setSection(on, whole){
+  if (!buf) return; const p = pl.playing ? pos() : pl.offset;
+  if (on){
+    const len = Math.min(4, buf.duration / 3);
+    if (whole){ sec.s = 0; sec.e = buf.duration; } else { sec.s = Math.max(0, Math.min(p, buf.duration - len)); sec.e = sec.s + len; }
+    sec.on = true; loop = true; $('#loop').setAttribute('aria-pressed', 'true');
+  } else { sec.on = false; pl.offset = p; if (pl.playing){ stopSrc(); startSrc(); } }
+  $('#sect').setAttribute('aria-pressed', sec.on ? 'true' : 'false');
+  if (on) applySection(); else draw();
+}
 function toggle(){ pl.playing ? pause() : play(); }
-function seek(t){ if (!buf) return; pl.offset = Math.max(0, Math.min(buf.duration - .01, t)); if (pl.playing){ stopSrc(); startSrc(); } draw(); }
+function seek(t){ if (!buf) return; pl.offset = Math.max(sec.on ? sec.s : 0, Math.min(sec.on ? sec.e - .01 : buf.duration - .01, t)); if (pl.playing){ stopSrc(); startSrc(); } draw(); }
 const PLAY = 'M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5Z', PAUSE = 'M7 4h3.5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm6.5 0H17a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3.5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z';
 function setPlayIcon(){ $('#playIcon').setAttribute('d', pl.playing ? PAUSE : PLAY); $('#play').setAttribute('aria-label', pl.playing ? 'Pause' : 'Play'); }
 
@@ -574,7 +603,7 @@ function applyAll(){
 function buildControls(){
   const el = $('#controls');
   el.innerHTML = `<div class="chead"><div><div class="lbl">Now hearing</div><div class="nm" id="nm">Original</div></div><button class="btn" id="reset">Reset all</button></div><div class="props" id="props" aria-live="polite"></div>` +
-    GROUPS.map(([title, keys, kind]) => `<div class="grp"><h3>${title}</h3>` + (kind === 'faders'
+    GROUPS.map(([title, keys, kind]) => `<div class="grp"><h3>${title}</h3>` + (title === 'Bass & drivers' ? '<p class="note" id="subNote"></p>' : '') + (kind === 'faders'
       ? `<div class="faders">${keys.map(k => `<div class="fader"><output data-o="${k}"></output><input class="v" type="range" min="0" max="1000" data-k="${k}" aria-label="${SL[k].label} EQ"><label>${SL[k].label}<small>${SL[k].sub}</small></label></div>`).join('')}</div>`
       : keys.map(k => k === 'mono'
         ? `<div class="row2 sw"><span>Mono (phone-style)</span><button class="switch" role="switch" id="monoSw" aria-checked="false" aria-label="Mono"></button></div>`
@@ -586,7 +615,7 @@ function buildControls(){
   });
   $('#monoSw').onclick = () => { state.mono = state.mono ? 0 : 1; bypass && setBypass(false); markCustom(); syncOne('mono'); applyAll(); };
   $('#reset').onclick = () => { state = { ...D }; current = null; setNow('Original'); syncAll(); applyAll(); markPresets(); };
-  syncAll();
+  syncAll(); updateSubNote();
 }
 function paint(inp, bipolar){
   const p = inp.value / 10, v = inp.classList.contains('v');
@@ -594,7 +623,7 @@ function paint(inp, bipolar){
   const dir = v ? 'to top' : 'to right';
   inp.style.setProperty('--trk', `linear-gradient(${dir},#2a2a31 ${a}%,var(--accent) ${a}%,var(--accent) ${b}%,#2a2a31 ${b}%)`);
 }
-const PROPS = { size:'Driver', bass:'Subs', bassX:'Crossover', bassF:'Tuning', bassQ:'Boom', bassSticky:'Sticky', bassDrive:'Sub drive', eqL:'Low', eqM:'Mid', eqH:'High', hp:'Low cut', lp:'High cut', dry:'Direct', rvMix:'Reverb', rvDecay:'Size', rvDamp:'Damping', rvPre:'Pre-delay', ecT:'Echo', ecFb:'Feedback', ecMix:'Echo mix', drive:'Drive', wob:'Wobble', wobRate:'Rate', pitch:'Pitch', noise:'Ambience', noiseLp:'Colour', gain:'Gain' };
+const PROPS = { size:'Mains', subSize:'Sub driver', bass:'Sub', bassX:'Crossover', bassF:'Tuning', bassQ:'Boom', bassSticky:'Sticky', bassDrive:'Sub drive', eqL:'Low', eqM:'Mid', eqH:'High', hp:'Low cut', lp:'High cut', dry:'Direct', rvMix:'Reverb', rvDecay:'Size', rvDamp:'Damping', rvPre:'Pre-delay', ecT:'Echo', ecFb:'Feedback', ecMix:'Echo mix', drive:'Drive', wob:'Wobble', wobRate:'Rate', pitch:'Pitch', noise:'Ambience', noiseLp:'Colour', gain:'Gain' };
 const KIND_NAMES = { room:'Small room', hall:'Hall', tunnel:'Flutter echoes', stadium:'Distant slaps', canyon:'Canyon echoes', cave:'Cave', none:'No early echoes' };
 function renderProps(){
   const el = $('#props'); if (!el) return; const chips = [];
@@ -605,7 +634,7 @@ function renderProps(){
     if ((k === 'rvDecay' || k === 'rvDamp' || k === 'rvPre') && state.rvMix <= .01) continue;
     if ((k === 'ecT' || k === 'ecFb') && state.ecMix <= .01) continue;
     if (k === 'wobRate' && state.wob <= .01) continue;
-    if (/^bass[XFQSD]/.test(k) && state.bass <= .01) continue;
+    if ((/^bass[XFQSD]/.test(k) || k === 'subSize') && state.bass <= .01) continue;
     if (k === 'noiseLp' && state.noise <= .001) continue;
     chips.push([PROPS[k], SL[k].fmt(state[k])]);
   }
@@ -620,6 +649,7 @@ function syncOne(k){
   paint(inp, sp.min < 0 && sp.max > 0);
 }
 const syncAll = () => Object.keys(SL).forEach(syncOne) || syncOne('mono');
+function updateSubNote(){ const n = $('#subNote'); if (n) n.textContent = buf && buf.numberOfChannels >= 6 ? 'Sub is fed by this track’s LFE channel.' : 'One driver per side, plus one sub fed from the L+R mix.'; }
 function setNow(n){ $('#nm').textContent = n; }
 function markCustom(){ if (current !== null){ current = null; markPresets(); } setNow('Custom'); }
 function setBypass(b){ bypass = b; $('#fxtog').setAttribute('aria-pressed', b ? 'false' : 'true'); applyAll(); }
@@ -657,9 +687,9 @@ async function loadFile(file){
   } catch (e) { toast('Couldn’t read that file. Try an mp3, wav, m4a or ogg.'); }
 }
 function setBuffer(b, name){
-  stopSrc(); pl.playing = false; pl.offset = 0; buf = b; fileName = name; computePeaks();
+  stopSrc(); pl.playing = false; pl.offset = 0; sec.on = false; $('#sect').setAttribute('aria-pressed', 'false'); buf = b; fileName = name; computePeaks();
   $('#empty').classList.add('hide'); $('#play').disabled = false; $('#export').disabled = false;
-  $('#fname').textContent = name; setPlayIcon(); resize(); play();
+  $('#fname').textContent = name; updateSubNote(); setPlayIcon(); resize(); play();
 }
 $('#pick').onclick = () => $('#file').click();
 $('#file').onchange = e => { const f = e.target.files[0]; if (f) loadFile(f); e.target.value = ''; };
@@ -712,7 +742,14 @@ function draw(){
     g.fillStyle = i < px ? '#ff8a4c' : 'rgba(255,255,255,.2)'; g.fillRect(i * bw, (H - h) / 2, bw - dpr, h);
   }
   const fm = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
-  $('#time').textContent = fm(t * buf.duration) + ' / ' + fm(buf.duration);
+  if (sec.on){
+    const x1 = sec.s / buf.duration * W, x2 = sec.e / buf.duration * W;
+    g.fillStyle = 'rgba(11,11,13,.55)'; g.fillRect(0, 0, x1, H); g.fillRect(x2, 0, W - x2, H);
+    g.fillStyle = 'rgba(255,138,76,.08)'; g.fillRect(x1, 0, x2 - x1, H);
+    g.fillStyle = '#ff8a4c';
+    for (const x of [x1, x2]){ g.fillRect(x - dpr, 0, 2 * dpr, H); g.fillRect(x - 4 * dpr, H / 2 - 12 * dpr, 8 * dpr, 24 * dpr); }
+  }
+  $('#time').textContent = fm(t * buf.duration) + ' / ' + fm(buf.duration) + (sec.on ? ' · loop ' + fm(sec.s) + '–' + fm(sec.e) : '');
 }
 const bins = new Uint8Array(1024);
 function drawSpec(){
@@ -729,13 +766,32 @@ function drawSpec(){
 let raf = 0;
 function tick(){ cancelAnimationFrame(raf); const f = () => { draw(); drawSpec(); if (pl.playing) raf = requestAnimationFrame(f); else { spec.getContext('2d').clearRect(0, 0, spec.width, spec.height); } }; f(); }
 function scrubFrom(e){ const r = wave.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); }
-wave.addEventListener('pointerdown', e => { if (!buf) return; wave.setPointerCapture(e.pointerId); drag = scrubFrom(e); draw(); });
-wave.addEventListener('pointermove', e => { if (drag === null) return; drag = scrubFrom(e); draw(); });
-wave.addEventListener('pointerup', e => { if (drag === null) return; const t = scrubFrom(e); drag = null; seek(t * buf.duration); if (pl.playing) tick(); });
+let hdrag = null;
+function nearHandle(e){
+  if (!sec.on || !buf) return null; const r = wave.getBoundingClientRect(), x = e.clientX - r.left;
+  const ds = Math.abs(x - sec.s / buf.duration * r.width), de = Math.abs(x - sec.e / buf.duration * r.width);
+  return Math.min(ds, de) > 12 ? null : (ds <= de ? 's' : 'e');
+}
+wave.addEventListener('pointerdown', e => {
+  if (!buf) return; wave.setPointerCapture(e.pointerId);
+  const h = nearHandle(e); if (h){ hdrag = h; return; }
+  drag = scrubFrom(e); draw();
+});
+wave.addEventListener('pointermove', e => {
+  if (hdrag){ const t = scrubFrom(e) * buf.duration; if (hdrag === 's') sec.s = Math.min(Math.max(0, t), sec.e - .2); else sec.e = Math.max(Math.min(buf.duration, t), sec.s + .2); draw(); return; }
+  if (drag === null){ wave.style.cursor = nearHandle(e) ? 'ew-resize' : 'pointer'; return; }
+  drag = scrubFrom(e); draw();
+});
+wave.addEventListener('pointerup', e => { if (hdrag){ hdrag = null; applySection(); return; } if (drag === null) return; const t = scrubFrom(e); drag = null; seek(t * buf.duration); if (pl.playing) tick(); });
 
 /* ---------- buttons & keys ---------- */
 $('#play').onclick = toggle;
-$('#loop').onclick = () => { loop = !loop; $('#loop').setAttribute('aria-pressed', loop); if (pl.playing){ pl.offset = pos(); stopSrc(); startSrc(); } };
+$('#loop').onclick = () => {
+  const p = buf ? (pl.playing ? pos() : pl.offset) : 0; loop = !loop; $('#loop').setAttribute('aria-pressed', loop);
+  if (!loop && sec.on){ sec.on = false; $('#sect').setAttribute('aria-pressed', 'false'); }
+  pl.offset = p; if (pl.playing){ stopSrc(); startSrc(); } draw();
+};
+$('#sect').onclick = () => setSection(!sec.on);
 $('#fxtog').onclick = () => setBypass(!bypass);
 $('#vol').oninput = () => applyAll();
 addEventListener('keydown', e => {
@@ -743,6 +799,11 @@ addEventListener('keydown', e => {
   const rangeFocus = e.target.matches && e.target.matches('input[type=range]');
   if (e.code === 'Space'){ e.preventDefault(); toggle(); }
   else if (e.key === 'b' || e.key === 'B'){ setBypass(!bypass); }
+  else if (e.key === '[' || e.key === ']'){
+    if (!buf) return; if (!sec.on) setSection(true, true); const p = pos();
+    if (e.key === '[') sec.s = Math.min(Math.max(0, p), sec.e - .2); else sec.e = Math.max(Math.min(buf.duration, p), sec.s + .2);
+    applySection();
+  }
   else if (e.key === 'ArrowLeft' && !rangeFocus){ e.preventDefault(); seek(pos() - 5); }
   else if (e.key === 'ArrowRight' && !rangeFocus){ e.preventDefault(); seek(pos() + 5); }
   else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !rangeFocus){
@@ -765,16 +826,17 @@ function wav(ab){
 async function renderOffline(s){
   const sr = ctx.sampleRate, rate = rateOf(s);
   const tail = 1 + (s.rvMix > .02 ? s.rvDecay + s.rvPre / 1000 + .3 : 0) + (s.ecMix > .02 ? Math.min(8, s.ecT / 1000 * 8) : 0);
-  const off = new OfflineAudioContext(2, Math.ceil((buf.duration / rate + Math.min(tail, 14)) * sr), sr), f = new FX(off);
-  f.vol = 1; f.apply(s, true);
-  const src = off.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate; src.connect(f.input); src.start();
+  const span = sec.on ? sec.e - sec.s : buf.duration;
+  const off = new OfflineAudioContext(2, Math.ceil((span / rate + Math.min(tail, 14)) * sr), sr), f = new FX(off);
+  f.vol = 1;
+  const src = off.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate; f.connectSource(src, buf.numberOfChannels); f.apply(s, true); sec.on ? src.start(0, sec.s, span) : src.start();
   return off.startRendering();
 }
 $('#export').onclick = async () => {
   if (!buf) return; const b = $('#export'); b.disabled = true; b.textContent = 'Rendering…';
   try {
     const out = await renderOffline(eff()), url = URL.createObjectURL(wav(out)), a = document.createElement('a');
-    const label = bypass ? 'original' : (current !== null ? PRESETS[current].n : 'custom');
+    const label = (bypass ? 'original' : (current !== null ? PRESETS[current].n : 'custom')) + (sec.on ? ' loop' : '');
     a.href = url; a.download = fileName.replace(/\.[^.]+$/, '') + ' - ' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.wav'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 4000);
     toast('Saved ' + a.download);
   } catch (e) { toast('Export failed: ' + e.message); }
