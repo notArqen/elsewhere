@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Elsewhere — Your sound. Somewhere else.</title>
-<meta name="description" content="Drop in any audio and place it in a tunnel, a stadium, a car, underwater. 90+ spaces, a 3-band EQ and full control, all in your browser.">
+<meta name="description" content="Drop in any audio and place it in a tunnel, a stadium, a car, underwater. 110+ presets, a 3-band EQ, subs and driver sizes, all in your browser.">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -218,12 +218,13 @@ const D = {
   dry:1, rvMix:0, rvDecay:1.5, rvDamp:.5, rvPre:0, rvEr:'room',
   ecT:300, ecFb:.35, ecMix:0,
   drive:0, wob:0, wobRate:.6, pitch:0, mono:0,
-  noise:0, noiseLp:400, gain:0
+  noise:0, noiseLp:400, gain:0,
+  size:21, bass:0, bassX:120, bassF:50, bassQ:1.5, bassSticky:0, bassDrive:0
 };
 
 const CATS = [
   ['rooms','Rooms'], ['spaces','Big spaces'], ['outside','Outdoors'], ['distance','Distance'], ['muffled','Muffled'],
-  ['vehicles','Vehicles'], ['water','Water'], ['devices','Devices'], ['mood','Moods'], ['echo','Echo & FX']
+  ['vehicles','Vehicles'], ['water','Water'], ['devices','Devices'], ['bass','Bass & subs'], ['drivers','Driver sizes'], ['mood','Moods'], ['echo','Echo & FX']
 ];
 const PRESETS = [];
 const P = (c, n, v) => PRESETS.push({ id: PRESETS.length, c, n, v: { ...D, ...v } });
@@ -307,6 +308,24 @@ P('devices','Tin can',        {hp:700, lp:3000, mono:1, eqM:4, drive:.15});
 P('devices','Boombox',        {eqL:7, eqH:1, drive:.25, rvMix:.1, rvDecay:.2});
 P('devices','Lo-fi tape',     {lp:6000, hp:60, drive:.15, wob:.2, wobRate:.5, noise:.04, noiseLp:5000, eqH:-3});
 P('devices','Dusty record',   {lp:9000, hp:40, wob:.06, wobRate:.55, noise:.07, noiseLp:6000, drive:.05, eqL:1});
+// bass & subs
+P('bass','Club subs',        {bass:.7, bassX:100, bassF:45, bassQ:2, bassSticky:.3, size:18, eqL:2});
+P('bass','Car subs',         {bass:.9, bassX:80, bassF:38, bassQ:4, bassSticky:.5, bassDrive:.25, size:12, lp:8000, rvMix:.1, rvDecay:.15, noise:.08, noiseLp:200});
+P('bass','Dual 18s',         {bass:1, bassX:90, bassF:32, bassQ:3, bassSticky:.4, bassDrive:.1, size:18, eqL:3, gain:-2});
+P('bass','Boomy 808',        {bass:.9, bassX:110, bassF:50, bassQ:7, bassSticky:.8, bassDrive:.2, size:15});
+P('bass','Tight sealed sub', {bass:.95, bassX:100, bassF:55, bassQ:.8, bassSticky:0, size:12});
+P('bass','Ported boom',      {bass:.8, bassX:100, bassF:40, bassQ:5, bassSticky:.6, size:15});
+P('bass','Sticky bass',      {bass:.8, bassX:100, bassF:50, bassQ:3, bassSticky:1, size:12});
+P('bass','Loose & floppy',   {bass:.7, bassX:110, bassF:45, bassQ:6, bassSticky:.7, size:18, eqL:2});
+P('bass','Distorted subs',   {bass:.9, bassX:100, bassF:45, bassQ:3, bassSticky:.4, bassDrive:.8, size:12, gain:-2});
+P('bass','Earthquake',       {bass:1, bassX:70, bassF:30, bassQ:6, bassSticky:.9, bassDrive:.3, size:21, eqL:5, gain:-3});
+P('bass','Subs next door',   {lp:250, bass:.8, bassX:80, bassF:40, bassQ:3, bassSticky:.4, size:15, gain:3});
+P('bass','Punchy kick',      {bass:.95, bassX:120, bassF:60, bassQ:1.5, bassSticky:.1, bassDrive:.1, size:10});
+P('bass','Bass-boosted cans',{bass:.5, bassX:150, bassF:60, bassQ:1, bassSticky:.2, size:12, eqL:3});
+P('bass','Clean studio sub', {bass:.5, bassX:90, bassF:50, bassQ:.7, bassSticky:0, size:15});
+// driver sizes
+[[3,'3″ laptop driver'],[4,'4″ micro speaker'],[5.25,'5¼″ bookshelf'],[6.5,'6½″ door speaker'],[8,'8″ woofer'],[10,'10″ woofer'],[12,'12″ woofer'],[15,'15″ woofer'],[18,'18″ sub'],[21,'21″ monster sub']].forEach(([s, n]) =>
+  P('drivers', n, s >= 8 ? {size:s, bass:.35, bassX:120, bassF:Math.round(20 * Math.pow(21 / s, 1.35) * 1.7), bassQ:1.5, bassSticky:.15} : {size:s}));
 // moods
 P('mood','Slowed + reverb',{pitch:-3, rvMix:.5, rvDecay:4, rvDamp:.5, rvPre:30, eqH:-2});
 P('mood','Nightcore',      {pitch:4, eqH:2});
@@ -350,10 +369,18 @@ const SL = {
   pitch:{label:'Speed / pitch', min:-12, max:12, step:.5, fmt:v => (v > 0 ? '+' : '') + v.toFixed(1) + ' st'},
   noise:{label:'Level', min:0, max:1, fmt:fpc},
   noiseLp:{label:'Colour (low → airy)', min:80, max:8000, log:1, fmt:fhz},
-  gain:{label:'Makeup gain', min:-12, max:12, step:.5, fmt:fdb}
+  gain:{label:'Makeup gain', min:-12, max:12, step:.5, fmt:fdb},
+  size:{label:'Driver size', min:3, max:21, log:1, step:.25, fmt:v => (Math.round(v * 4) / 4) + '″' + (v >= 20.5 ? ' (full range)' : '')},
+  bass:{label:'Sub level', min:0, max:1, fmt:fpc},
+  bassX:{label:'Crossover', min:40, max:250, log:1, fmt:fhz},
+  bassF:{label:'Tuning', min:25, max:120, log:1, fmt:fhz},
+  bassQ:{label:'Boom (resonance)', min:.7, max:10, log:1, fmt:v => v.toFixed(1)},
+  bassSticky:{label:'Stickiness', min:0, max:1, fmt:fpc},
+  bassDrive:{label:'Driver distortion', min:0, max:1, fmt:fpc}
 };
 const GROUPS = [
   ['3-band EQ', ['eqL','eqM','eqH'], 'faders'],
+  ['Bass & drivers', ['size','bass','bassX','bassF','bassQ','bassSticky','bassDrive']],
   ['Filter', ['hp','lp']],
   ['Space', ['rvMix','rvDecay','rvDamp','rvPre','dry']],
   ['Echo', ['ecT','ecFb','ecMix']],
@@ -406,7 +433,12 @@ class FX {
     this.input = c.createGain();
     this.mono = c.createGain(); this.mono.channelCountMode = 'explicit'; this.mono.channelCount = 2; this.mono.channelInterpretation = 'speakers';
     this.lo = f('lowshelf', 250); this.mid = f('peaking', 1000, .8); this.hi = f('highshelf', 4000);
+    this.ext = f('highpass', 20, .8);
     this.hp = f('highpass', 20); this.lp = f('lowpass', 20000);
+    // parallel sub path: crossover -> resonance -> driver saturation -> stickiness -> level
+    this.bX = f('lowpass', 120); this.bRes = f('peaking', 50, 1.5); this.bPre = c.createGain(); this.bPre.gain.value = 2.5;
+    this.bSat = c.createWaveShaper(); this.bSat.oversample = '4x';
+    this.bComp = c.createDynamicsCompressor(); this.bComp.knee.value = 6; this.bG = c.createGain(); this.bG.gain.value = 0;
     this.shaper = c.createWaveShaper(); this.shaper.oversample = '2x';
     this.vib = c.createDelay(.05); this.vib.delayTime.value = .012;
     this.lfo = c.createOscillator(); this.lfoG = c.createGain(); this.lfo.connect(this.lfoG).connect(this.vib.delayTime); this.lfo.start();
@@ -423,7 +455,8 @@ class FX {
     this.nLp = f('lowpass', 400); this.nG = c.createGain(); this.nG.gain.value = 0;
     this.nSrc.connect(this.nLp).connect(this.nG).connect(this.master); this.nSrc.start();
     // graph
-    this.input.connect(this.mono).connect(this.lo).connect(this.mid).connect(this.hi).connect(this.hp).connect(this.lp).connect(this.shaper).connect(this.vib);
+    this.input.connect(this.mono).connect(this.lo).connect(this.mid).connect(this.hi).connect(this.ext).connect(this.hp).connect(this.lp).connect(this.shaper).connect(this.vib);
+    this.hi.connect(this.bX).connect(this.bRes).connect(this.bPre).connect(this.bSat).connect(this.bComp).connect(this.bG).connect(this.mix);
     this.vib.connect(this.dryG).connect(this.mix);
     this.vib.connect(this.echoD); this.echoD.connect(this.echoLp).connect(this.echoFb).connect(this.echoD); this.echoD.connect(this.echoOut).connect(this.mix);
     this.vib.connect(this.rvPre); this.rvOut.connect(this.mix);
@@ -463,6 +496,16 @@ class FX {
       this._d = s.drive;
       if (s.drive < .005) this.shaper.curve = null;
       else { const n = 2048, cv = new Float32Array(n), th = Math.tanh(g); for (let i = 0; i < n; i++) cv[i] = Math.tanh(g * (i * 2 / (n - 1) - 1)) / th; this.shaper.curve = cv; }
+    }
+    set(this.ext.frequency, Math.max(20, 20 * Math.pow(21 / s.size, 1.35)));
+    set(this.bX.frequency, s.bassX); set(this.bRes.frequency, s.bassF); set(this.bRes.Q, s.bassQ);
+    set(this.bRes.gain, Math.min(14, 3 + s.bassQ * 1.6));
+    set(this.bComp.threshold, -34 + s.bassSticky * 8); set(this.bComp.ratio, 2 + s.bassSticky * 14);
+    set(this.bComp.attack, .004 + s.bassSticky * .03); set(this.bComp.release, .05 + s.bassSticky * .7);
+    set(this.bG.gain, s.bass * .9 * (1 + s.bassSticky * .8));
+    if (s.bassDrive !== this._bd){
+      this._bd = s.bassDrive; const bg = 1 + s.bassDrive * 9, n = 1024, cv = new Float32Array(n), th = Math.tanh(bg);
+      for (let i = 0; i < n; i++) cv[i] = Math.tanh(bg * (i * 2 / (n - 1) - 1)) / th; this.bSat.curve = cv;
     }
     set(this.lfoG.gain, s.wob * .008); set(this.lfo.frequency, s.wobRate);
     set(this.dryG.gain, s.dry);
@@ -551,7 +594,7 @@ function paint(inp, bipolar){
   const dir = v ? 'to top' : 'to right';
   inp.style.setProperty('--trk', `linear-gradient(${dir},#2a2a31 ${a}%,var(--accent) ${a}%,var(--accent) ${b}%,#2a2a31 ${b}%)`);
 }
-const PROPS = { eqL:'Low', eqM:'Mid', eqH:'High', hp:'Low cut', lp:'High cut', dry:'Direct', rvMix:'Reverb', rvDecay:'Size', rvDamp:'Damping', rvPre:'Pre-delay', ecT:'Echo', ecFb:'Feedback', ecMix:'Echo mix', drive:'Drive', wob:'Wobble', wobRate:'Rate', pitch:'Pitch', noise:'Ambience', noiseLp:'Colour', gain:'Gain' };
+const PROPS = { size:'Driver', bass:'Subs', bassX:'Crossover', bassF:'Tuning', bassQ:'Boom', bassSticky:'Sticky', bassDrive:'Sub drive', eqL:'Low', eqM:'Mid', eqH:'High', hp:'Low cut', lp:'High cut', dry:'Direct', rvMix:'Reverb', rvDecay:'Size', rvDamp:'Damping', rvPre:'Pre-delay', ecT:'Echo', ecFb:'Feedback', ecMix:'Echo mix', drive:'Drive', wob:'Wobble', wobRate:'Rate', pitch:'Pitch', noise:'Ambience', noiseLp:'Colour', gain:'Gain' };
 const KIND_NAMES = { room:'Small room', hall:'Hall', tunnel:'Flutter echoes', stadium:'Distant slaps', canyon:'Canyon echoes', cave:'Cave', none:'No early echoes' };
 function renderProps(){
   const el = $('#props'); if (!el) return; const chips = [];
@@ -562,6 +605,7 @@ function renderProps(){
     if ((k === 'rvDecay' || k === 'rvDamp' || k === 'rvPre') && state.rvMix <= .01) continue;
     if ((k === 'ecT' || k === 'ecFb') && state.ecMix <= .01) continue;
     if (k === 'wobRate' && state.wob <= .01) continue;
+    if (/^bass[XFQSD]/.test(k) && state.bass <= .01) continue;
     if (k === 'noiseLp' && state.noise <= .001) continue;
     chips.push([PROPS[k], SL[k].fmt(state[k])]);
   }
